@@ -116,7 +116,7 @@ void PD_flow_mrpt::createImagePyramidGPU()
     csf_device = ObjectToDevice(&csf_host);
 
     unsigned int pyr_levels = round(log2(640/(cam_mode*cols))) + ctf_levels;
-    GaussianPyramidBridge(csf_device, pyr_levels, cam_mode);
+    GaussianPyramidBridge(csf_device, pyr_levels, 640, 480);
 
     //Copy scene flow object back to host
     BridgeBack(&csf_host, csf_device);
@@ -332,7 +332,7 @@ void PD_flow_mrpt::freeGPUMemory()
 void PD_flow_mrpt::initializeCUDA()
 {
     //Read parameters
-    csf_host.readParameters(rows, cols, lambda_i, lambda_d, mu, g_mask, ctf_levels, cam_mode, fovh, fovv);
+    csf_host.readParameters(640, 480, 528.0, 528.0, 320.0, 240.0, rows, cols, ctf_levels, g_mask);
 
     //Allocate memory
     csf_host.allocateDevMemory();
