@@ -241,7 +241,7 @@ bool PD_flow_opencv::loadRGBDFrames()
 		return 0;
 	}
 
-	depth1.convertTo(depth_float, CV_32FC1, 1.0 / 5000.0);
+	depth1.convertTo(depth_float, CV_32FC1, 1.0 / 1000.0);
 	for (unsigned int v=0; v<height; v++)
 		for (unsigned int u=0; u<width; u++)
 			Z[v + u*height] = depth_float.at<float>(v,u);
@@ -268,7 +268,7 @@ bool PD_flow_opencv::loadRGBDFrames()
 		printf("\nThe second depth image (%s) cannot be found, please check that they are in the correct folder \n", depth_filename_2);
 		return 0;
 	}
-	depth2.convertTo(depth_float, CV_32FC1, 1.0 / 5000.0);
+	depth2.convertTo(depth_float, CV_32FC1, 1.0 / 1000.0);
 	for (unsigned int v=0; v<height; v++)
 		for (unsigned int u=0; u<width; u++)
 			Z[v + u*height] = depth_float.at<float>(v,u);

@@ -1,17 +1,30 @@
-PROJECT(PD-Flow)
+cmake_minimum_required(VERSION 2.8)
+project(PD-Flow)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4) #I have no idea, mine is 3.0.2
-if(COMMAND cmake_policy)
-      cmake_policy(SET CMP0003 NEW)  # Required by CMake 2.7+
-endif(COMMAND cmake_policy)
+# Set optimized building:
+if(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mtune=native")
+endif(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
 
-FIND_PACKAGE(CUDA REQUIRED)
-INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
-set(CUDA_NVCC_FLAGS "-arch=sm_20")
+################
+# Core library #
+################
 
-#Build scene flow CUDA lib
-CUDA_ADD_LIBRARY(pdflow_cudalib pdflow_cudalib.h pdflow_cudalib.cu)
+find_package(CUDA REQUIRED)
+include_directories(${CUDA_INCLUDE_DIRS})
+# set(CUDA_NVCC_FLAGS "-arch=sm_20")
 
+cuda_add_library(pdflow_cudalib pdflow_cudalib.h pdflow_cudalib.cu SHARED)
+
+##################
+# OpenCV wrapper #
+##################
+
+
+
+#################
+# Bundled demos #
+#################
 
 SET(DEFAULT_BUILD_EVALUATOR ON)
 SET(BUILD_EVALUATOR ${DEFAULT_BUILD_EVALUATOR} CACHE BOOL "Build the scene flow evaluator for a RGB-D frame pair that uses OpenCV")
@@ -62,11 +75,4 @@ IF (BUILD_RT_VISUALIZATION)
 			${CUDA_LIBRARIES}
 			${OpenNI_lib}
 			pdflow_cudalib)
-ENDIF (BUILD_RT_VISUALIZATION)			
-
-			
-# Set optimized building:
-IF(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mtune=native")
-ENDIF(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-
+ENDIF (BUILD_RT_VISUALIZATION)
