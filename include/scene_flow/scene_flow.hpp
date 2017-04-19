@@ -12,7 +12,7 @@ private:
 	unsigned int rows, cols, ctf_levels;
 	float mu, lambda_i, lambda_d;
 
-	cv::Mat gray1, gray2, depth1, depth2;
+	cv::Mat intensity1, intensity2, depth1, depth2;
 
 	CSF_cuda csf_host, *csf_device;
 
@@ -21,11 +21,5 @@ public:
 	~SceneFlow();
 
 };
-
-
-
-
-
-
 
 #endif /* SCENE_FLOW_HPP */

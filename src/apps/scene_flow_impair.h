@@ -34,7 +34,7 @@
 #include <fstream>
 #include <string.h>
 #include <scene_flow/pdflow_cudalib.h>
-#include "legend_pdflow.xpm"
+//#include "legend_pdflow.xpm"
 
 #ifdef _WIN32
     #define M_PI 3.14159265f
