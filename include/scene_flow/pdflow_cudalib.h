@@ -21,6 +21,9 @@
 **																			**
 *****************************************************************************/
 
+#ifndef PDFLOW_CUDALIB_H
+#define PDFLOW_CUDALIB_H
+
 #include <stdio.h>
 #include <cuda_runtime.h>
 #include <cuda.h>
@@ -218,5 +221,4 @@ struct fieldAndPresence {
 //Naive implementation of bubbleSort (applied to very small arrays)
 __device__ void bubbleSortDev(fieldAndPresence array[], unsigned int num_elem);
 
-
-
+#endif /* PDFLOW_CUDALIB_H */

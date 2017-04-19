@@ -21,61 +21,54 @@
 **																			**
 *****************************************************************************/
 
-#include <mrpt/utils.h>
-#include <mrpt/system.h>
-#include <mrpt/gui/CDisplayWindow3D.h>
-#include <mrpt/opengl.h>
-#include <Eigen/src/Core/Matrix.h>
-#include "pdflow_cudalib.h"
-#include "legend_pdflow.xpm"
-#include <OpenNI.h>
-#include <stdio.h>
+#ifdef _WIN32
+    #include <opencv2/core.hpp>
+    #include <opencv2/highgui.hpp>
+	#include <io.h>
+#elif __linux
+    #include <opencv2/core/core.hpp>
+    #include <opencv2/highgui/highgui.hpp>
+	#include <unistd.h>
+#endif
+
+#include <fstream>
 #include <string.h>
+#include <scene_flow/pdflow_cudalib.h>
+#include "legend_pdflow.xpm"
 
 #ifdef _WIN32
-    inline float log2(const float x){ return  log(x) * M_LOG2E;}
+    #define M_PI 3.14159265f
+    #define M_LOG2E 1.44269504088896340736f //log2(e)
+    inline float log2(const float x){ return  log(x) * M_LOG2E; }
 
 #elif __linux
     inline int stoi(char *c) {return int(std::strtol(c,NULL,10));}
 
 #endif
 
+//==================================================================
+//					PD-Flow class (using openCV)
+//==================================================================
 
-using namespace mrpt;
-using namespace mrpt::math;
-using namespace mrpt::utils;
-using namespace std;
-using mrpt::poses::CPose3D;
-using Eigen::MatrixXf;
-
-
-class PD_flow_mrpt {
+class PD_flow_opencv {
 public:
 
-    float fps;              //In Hz
     unsigned int cam_mode;	// (1 - 640 x 480, 2 - 320 x 240)
     unsigned int ctf_levels;//Number of levels used in the coarse-to-fine scheme (always dividing by two)
-    unsigned int num_max_iter[6];  //Max number of iterations distributed homogeneously between all levels
+    unsigned int num_max_iter[6];  //Number of iterations at every pyramid level (primal-dual solver)
     float g_mask[25];
 	
-    //Matrices that store the original images with the image resolution
-    MatrixXf colour_wf;
-    MatrixXf depth_wf;
+    //Matrices that store the original images
+	cv::Mat intensity1;
+	cv::Mat depth1;
+	cv::Mat intensity2;
+	cv::Mat depth2;
 
-    //Matrices that store the images downsampled
-    vector<MatrixXf> colour;
-    vector<MatrixXf> colour_old;
-    vector<MatrixXf> depth;
-    vector<MatrixXf> depth_old;
-    vector<MatrixXf> xx;
-    vector<MatrixXf> xx_old;
-    vector<MatrixXf> yy;
-    vector<MatrixXf> yy_old;
+	//Aux pointers to copy the RGBD images to CUDA 
+	float *I, *Z;
 
     //Motion field
-    vector<MatrixXf> dx;
-    vector<MatrixXf> dy;
-    vector<MatrixXf> dz;
+	float *dxp, *dyp, *dzp;
 
     //Camera properties
     float fovh;     //In radians
@@ -85,36 +78,40 @@ public:
     unsigned int rows;
     unsigned int cols;
 
+	//Resolution of the original images
+	unsigned int width;
+	unsigned int height;
+
     //Optimization Parameters
     float mu, lambda_i, lambda_d;
-
-    //Visual
-    gui::CDisplayWindow3D       window;
-    opengl::COpenGLScenePtr		scene;
-    utils::CImage				image;
-
-    //OpenNI2 - Camera
-    openni::Status          rc;
-    openni::Device          device;
-    openni::VideoMode       options;
-    openni::VideoStream 	rgb,dimage;
 
     //Cuda
     CSF_cuda csf_host, *csf_device;
 
+    // Filenames
+    const char *intensity_filename_1;
+    const char *intensity_filename_2;
+    const char *depth_filename_1;
+    const char *depth_filename_2;
+    const char *output_filename_root;
+
 	//Methods
+	bool loadRGBDFrames();
     void createImagePyramidGPU();
     void solveSceneFlowGPU();
-	bool OpenCamera();
-	void CloseCamera();
-	void CaptureFrame();
     void freeGPUMemory();
     void initializeCUDA();
-	void initializeScene();
-	void updateScene();
-	void initializePDFlow();
+	void showImages();
+    cv::Mat createImage() const;
+    void saveResults( const cv::Mat& image) const;
+	void showAndSaveResults();
 
-    PD_flow_mrpt(unsigned int cam_mode_config, unsigned int fps_config, unsigned int rows_config);
+    PD_flow_opencv( unsigned int rows_config, 
+                    const char *intensity_filename_1="i1.png", 
+                    const char *intensity_filename_2="i2.png", 
+                    const char *depth_filename_1="z1.png", 
+                    const char *depth_filename_2="z2.png", 
+                    const char* output_filename_root="pdflow");
 };
 
 

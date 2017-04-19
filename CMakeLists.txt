@@ -6,6 +6,8 @@ if(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mtune=native")
 endif(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
 
+include_directories(include)
+
 ################
 # Core library #
 ################
@@ -14,13 +16,19 @@ find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 # set(CUDA_NVCC_FLAGS "-arch=sm_20")
 
-cuda_add_library(pdflow_cudalib pdflow_cudalib.h pdflow_cudalib.cu SHARED)
+cuda_add_library(pdflow_cudalib src/pdflow_cudalib.cu SHARED)
 
-##################
-# OpenCV wrapper #
-##################
+###################
+# Library wrapper #
+###################
 
+find_package(OpenCV REQUIRED)
 
+add_library(scene_flow SHARED src/scene_flow.cpp)
+target_link_libraries(scene_flow ${OpenCV_LIBS} ${CUDA_LIBRARIES} pdflow_cudalib)
+
+add_executable(scene_flow_test src/scene_flow_test.cpp)
+target_link_libraries(scene_flow_test ${OpenCV_LIBS} ${CUDA_LIBRARIES} pdflow_cudalib scene_flow)
 
 #################
 # Bundled demos #
@@ -33,15 +41,15 @@ SET(BUILD_EVALUATOR ${DEFAULT_BUILD_EVALUATOR} CACHE BOOL "Build the scene flow 
 IF (BUILD_EVALUATOR)
 	FIND_PACKAGE(OpenCV REQUIRED)
 	
-	ADD_EXECUTABLE(Scene-Flow-Impair  
-		main_scene_flow_impair.cpp
-		scene_flow_impair.cpp
-		scene_flow_impair.h)
+	ADD_EXECUTABLE(Scene-Flow-Impair
+		src/apps/main_scene_flow_impair.cpp
+		src/apps/scene_flow_impair.cpp
+		src/apps/scene_flow_impair.h)
 		
 	TARGET_LINK_LIBRARIES(Scene-Flow-Impair 
 			${OpenCV_LIBS}
 			${CUDA_LIBRARIES}
-			pdflow_cudalib)		
+			pdflow_cudalib)
 ENDIF (BUILD_EVALUATOR)
 
 SET(DEFAULT_BUILD_RT_VISUALIZATION ON)
@@ -64,11 +72,11 @@ IF (BUILD_RT_VISUALIZATION)
 		SET(OpenNI_lib "${OpenNI2_libdir}/libOpenNI2.so")
 	ENDIF (UNIX)
 
-	ADD_EXECUTABLE(Scene-Flow-Visualization  
-		main_scene_flow_visualization.cpp
-		scene_flow_visualization.cpp
-		scene_flow_visualization.h
-		legend_pdflow.xpm)
+	ADD_EXECUTABLE(Scene-Flow-Visualization
+		src/apps/main_scene_flow_visualization.cpp
+		src/apps/scene_flow_visualization.cpp
+		src/apps/scene_flow_visualization.h
+		src/apps/legend_pdflow.xpm)
 		
 	TARGET_LINK_LIBRARIES(Scene-Flow-Visualization
 			${MRPT_LIBS}
