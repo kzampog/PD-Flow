@@ -27,9 +27,6 @@ find_package(OpenCV REQUIRED)
 add_library(scene_flow SHARED src/scene_flow.cpp)
 target_link_libraries(scene_flow ${OpenCV_LIBS} ${CUDA_LIBRARIES} pdflow_cudalib)
 
-add_executable(scene_flow_test src/scene_flow_test.cpp)
-target_link_libraries(scene_flow_test ${OpenCV_LIBS} ${CUDA_LIBRARIES} pdflow_cudalib scene_flow)
-
 #################
 # Bundled demos #
 #################

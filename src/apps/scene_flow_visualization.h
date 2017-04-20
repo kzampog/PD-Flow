@@ -26,7 +26,7 @@
 #include <mrpt/gui/CDisplayWindow3D.h>
 #include <mrpt/opengl.h>
 #include <Eigen/src/Core/Matrix.h>
-#include <scene_flow/pdflow_cudalib.h>
+#include <pdflow_cudalib.h>
 #include "legend_pdflow.xpm"
 #include <OpenNI.h>
 #include <stdio.h>

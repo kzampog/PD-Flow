@@ -33,7 +33,7 @@
 
 #include <fstream>
 #include <string.h>
-#include <scene_flow/pdflow_cudalib.h>
+#include <pdflow_cudalib.h>
 //#include "legend_pdflow.xpm"
 
 #ifdef _WIN32
