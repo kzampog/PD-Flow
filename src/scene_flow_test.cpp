@@ -2,5 +2,9 @@
 
 int main(int argc, char** argv) {
 
+    SceneFlow * sf = new SceneFlow();
+
+	delete sf;
+
     return 0;
 }
