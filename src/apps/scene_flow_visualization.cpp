@@ -401,7 +401,7 @@ void PD_flow_mrpt::updateScene()
     //Scene flow
 	opengl::CVectorField3DPtr sf = scene->getByClass<opengl::CVectorField3D>(0);
 	sf->setPointCoordinates(depth_old[repr_level], xx_old[repr_level], yy_old[repr_level]);
-    sf->setVectorField(dx[0], dy[0], dz[0]);
+    sf->setVectorField(dz[0], dx[0], dy[0]);
 
     window.unlockAccess3DScene();
     window.repaint();

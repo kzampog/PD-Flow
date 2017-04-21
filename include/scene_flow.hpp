@@ -30,6 +30,9 @@ public:
 	void initialize();
 	void loadRGBDFrames(const cv::Mat &rgb1, const cv::Mat &depth1, const cv::Mat &rgb2, const cv::Mat &depth2);
 	void computeFlow();
+	void getFlowImages(cv::Mat &vx, cv::Mat &vy, cv::Mat &vz);
+	void getFlowImage(cv::Mat &flow);
+
 	cv::Mat getFlowVisualizationImage();
 
 	void setRGBDImageParameters(unsigned int im_width, unsigned int im_height, float intr_fx, float intr_fy, float intr_cx, float intr_cy);

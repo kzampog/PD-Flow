@@ -172,6 +172,22 @@ void SceneFlow::computeFlow() {
 	}
 }
 
+void SceneFlow::getFlowImages(cv::Mat &vx, cv::Mat &vy, cv::Mat &vz) {
+	cv::Mat vx_tmp(cols, rows, CV_32F, dx);
+	cv::Mat vy_tmp(cols, rows, CV_32F, dy);
+	cv::Mat vz_tmp(cols, rows, CV_32F, dz);
+
+	vx = vx_tmp.t();
+	vy = vy_tmp.t();
+	vz = vz_tmp.t();
+}
+
+void SceneFlow::getFlowImage(cv::Mat &flow) {
+	std::vector<cv::Mat> channels(3);
+	getFlowImages(channels[0], channels[1], channels[2]);
+	cv::merge(channels, flow);
+}
+
 cv::Mat SceneFlow::getFlowVisualizationImage() {
 	cv::Mat vis_image(rows, cols, CV_8UC3);
 

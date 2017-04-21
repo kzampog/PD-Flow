@@ -1182,9 +1182,12 @@ __device__ void CSF_cuda::computeMotionField(unsigned int index)
     //Fill the matrices dx,dy,dz with the scene flow estimate
     if (depth_old_dev[level_image][index] > 0)
     {
-        dx_dev[index] = dw_l_dev[index];
-        dy_dev[index] = depth_old_dev[level_image][index]*du_l_dev[index]*inv_fx + dw_l_dev[index]*xx_old_dev[level_image][index]/depth_old_dev[level_image][index];
-        dz_dev[index] = depth_old_dev[level_image][index]*dv_l_dev[index]*inv_fy + dw_l_dev[index]*yy_old_dev[level_image][index]/depth_old_dev[level_image][index];
+//        dx_dev[index] = dw_l_dev[index];
+//        dy_dev[index] = depth_old_dev[level_image][index]*du_l_dev[index]*inv_fx + dw_l_dev[index]*xx_old_dev[level_image][index]/depth_old_dev[level_image][index];
+//        dz_dev[index] = depth_old_dev[level_image][index]*dv_l_dev[index]*inv_fy + dw_l_dev[index]*yy_old_dev[level_image][index]/depth_old_dev[level_image][index];
+        dx_dev[index] = depth_old_dev[level_image][index]*du_l_dev[index]*inv_fx + dw_l_dev[index]*xx_old_dev[level_image][index]/depth_old_dev[level_image][index];
+        dy_dev[index] = depth_old_dev[level_image][index]*dv_l_dev[index]*inv_fy + dw_l_dev[index]*yy_old_dev[level_image][index]/depth_old_dev[level_image][index];
+        dz_dev[index] = dw_l_dev[index];
     }
     else
     {
