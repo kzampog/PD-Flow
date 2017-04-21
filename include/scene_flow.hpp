@@ -16,9 +16,8 @@ private:
 	float g_mask[25];
 	bool is_initialized;
 
-//	float *intensity_buffer, *depth_buffer;
-	float *dx, *dy, *dz;
 	cv::Mat intensity_img_buffer, depth_img_buffer;
+	float *dx, *dy, *dz;
 
 	CSF_cuda csf_host, *csf_device;
 
@@ -31,6 +30,7 @@ public:
 	void initialize();
 	void loadRGBDFrames(const cv::Mat &rgb1, const cv::Mat &depth1, const cv::Mat &rgb2, const cv::Mat &depth2);
 	void computeFlow();
+	cv::Mat getFlowVisualizationImage();
 
 	void setRGBDImageParameters(unsigned int im_width, unsigned int im_height, float intr_fx, float intr_fy, float intr_cx, float intr_cy);
 	void setCoarseToFineParameters(unsigned int max_rows, unsigned int max_cols, unsigned int num_levels, unsigned int num_fine_max_iter = 100);

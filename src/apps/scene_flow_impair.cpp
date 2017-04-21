@@ -38,6 +38,7 @@ PD_flow_opencv::PD_flow_opencv(unsigned int rows_config,
     rows = rows_config;      //Maximum size of the coarse-to-fine scheme - Default 240 (QVGA)
     cols = rows*320/240;
     ctf_levels = static_cast<unsigned int>(log2(float(rows/15))) + 1;
+
     fovh = M_PI*62.5f/180.f;
     fovv = M_PI*48.5f/180.f;
 
@@ -186,7 +187,7 @@ void PD_flow_opencv::initializeCUDA()
 	Z = (float *) malloc(sizeof(float)*width*height);   
 	
 	//Read parameters
-    csf_host.readParameters(640, 480, 528.0, 528.0, 320.0, 240.0, height, width, ctf_levels, g_mask);
+    csf_host.readParameters(640, 480, 528.0, 528.0, 319.5, 239.5, rows, cols, ctf_levels, g_mask);
 
     //Allocate memory
     csf_host.allocateDevMemory();

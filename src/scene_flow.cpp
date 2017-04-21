@@ -3,7 +3,7 @@
 //#include <cmath>
 
 //#include <iostream>
-//
+
 //std::string cvTypeToString(int type) {
 //	std::string r;
 //
@@ -25,11 +25,7 @@
 //	return r;
 //}
 
-
 void SceneFlow::cleanUp() {
-//	if (intensity_buffer) free(intensity_buffer);
-//	if (depth_buffer) free(depth_buffer);
-
 	if (max_iter) free(max_iter);
 	if (dx) free(dx);
 	if (dy) free(dy);
@@ -39,13 +35,6 @@ void SceneFlow::cleanUp() {
 }
 
 void SceneFlow::prepareRGBDImagePair(const cv::Mat &rgb, const cv::Mat &depth) {
-//	std::cout << "BEFORE: RGB is " << cvTypeToString(rgb.type()) << ", depth is " << cvTypeToString(depth.type()) << std::endl;
-//	double imin, imax, dmin, dmax;
-//	cv::minMaxLoc(rgb, &imin, &imax);
-//	cv::minMaxLoc(depth, &dmin, &dmax);
-//	std::cout << "RGB, from " << imin << " to " << imax << std::endl;
-//	std::cout << "depth, from " << dmin << " to " << dmax << std::endl;
-
 	cv::Mat intensity_tmp, depth_tmp;
 
 	if (rgb.channels() > 1) {
@@ -64,20 +53,13 @@ void SceneFlow::prepareRGBDImagePair(const cv::Mat &rgb, const cv::Mat &depth) {
 		depth.copyTo(depth_tmp);
 	}
 	depth_img_buffer = depth_tmp.t();
-
-//	std::cout << "AFTER: intensity is " << cvTypeToString(intensity_img_buffer.type()) << ", depth is " << cvTypeToString(depth_img_buffer.type()) << std::endl;
-//	cv::minMaxLoc(intensity_img_buffer, &imin, &imax);
-//	cv::minMaxLoc(depth_img_buffer, &dmin, &dmax);
-//	std::cout << "intensity, from " << imin << " to " << imax << std::endl;
-//	std::cout << "depth, from " << dmin << " to " << dmax << std::endl;
 }
 
 SceneFlow::SceneFlow() {
 	is_initialized = false;
 
 	max_iter = NULL;
-//	intensity_buffer = NULL;
-//	depth_buffer = NULL;
+
 	dx = NULL;
 	dy = NULL;
 	dz = NULL;
@@ -101,9 +83,6 @@ SceneFlow::~SceneFlow() {
 
 void SceneFlow::initialize() {
 	cleanUp();
-
-//	intensity_buffer = (float *) malloc(sizeof(float)*width*height);
-//	depth_buffer = (float *) malloc(sizeof(float)*width*height);
 
 	max_iter = (unsigned int *)malloc(ctf_levels*sizeof(unsigned int));
 	for (int i = ctf_levels - 1; i >= 0; i--) {
@@ -155,24 +134,19 @@ void SceneFlow::computeFlow() {
 
 		//Cuda allocate memory
 		csf_host.allocateMemoryNewLevel(rows_i, cols_i, i, level_image);
-
 		//Cuda copy object to device
 		csf_device = ObjectToDevice(&csf_host);
-
 		//Assign zeros to the corresponding variables
 		AssignZerosBridge(csf_device);
 
 		//Upsample previous solution
-		if (i>0)
-			UpsampleBridge(csf_device);
+		if (i > 0) UpsampleBridge(csf_device);
 
 		//Compute connectivity (Rij)
 		RijBridge(csf_device);
-
 		//Compute colour and depth derivatives
 		ImageGradientsBridge(csf_device);
 		WarpingBridge(csf_device);
-
 		//Compute mu_uv and step sizes for the primal-dual algorithm
 		MuAndStepSizesBridge(csf_device);
 
@@ -187,19 +161,38 @@ void SceneFlow::computeFlow() {
 
 		//Filter solution
 		FilterBridge(csf_device);
-
 		//Compute the motion field
 		MotionFieldBridge(csf_device);
-
 		//BridgeBack to host
 		BridgeBack(&csf_host, csf_device);
-
 		//Free memory of variables associated to this level
 		csf_host.freeLevelVariables();
-
 		//Copy motion field to CPU
 		csf_host.copyMotionField(dx, dy, dz);
 	}
+}
+
+cv::Mat SceneFlow::getFlowVisualizationImage() {
+	cv::Mat vis_image(rows, cols, CV_8UC3);
+
+	float maxmodx = 0.f, maxmody = 0.f, maxmodz = 0.f;
+	for (unsigned int v = 0; v < rows; v++) {
+		for (unsigned int u = 0; u < cols; u++) {
+			if (fabs(dx[v + u*rows]) > maxmodx) maxmodx = std::abs(dx[v + u*rows]);
+			if (fabs(dy[v + u*rows]) > maxmody) maxmody = std::abs(dy[v + u*rows]);
+			if (fabs(dz[v + u*rows]) > maxmodz) maxmodz = std::abs(dz[v + u*rows]);
+		}
+	}
+
+	for (unsigned int v = 0; v < rows; v++) {
+		for (unsigned int u = 0; u < cols; u++) {
+			vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmodx);
+			vis_image.at<cv::Vec3b>(v,u)[1] = static_cast<unsigned char>(255.f * std::abs(dy[v + u*rows])/maxmody);
+			vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmodz);
+		}
+	}
+
+	return vis_image;
 }
 
 void SceneFlow::setRGBDImageParameters(unsigned int im_width, unsigned int im_height, float intr_fx, float intr_fy, float intr_cx, float intr_cy) {
