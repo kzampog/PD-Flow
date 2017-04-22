@@ -12,7 +12,7 @@ private:
 	unsigned int rows, cols, ctf_levels, fine_max_iter;
 	float mu, lambda_i, lambda_d;
 
-	unsigned int * max_iter;
+	std::vector<unsigned int> max_iter;
 	float g_mask[25];
 	bool is_initialized;
 

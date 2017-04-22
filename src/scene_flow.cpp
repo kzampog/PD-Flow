@@ -26,11 +26,10 @@
 //}
 
 void SceneFlow::cleanUp() {
-	if (max_iter) free(max_iter);
+    max_iter.clear();
 	if (dx) free(dx);
 	if (dy) free(dy);
 	if (dz) free(dz);
-
 	if (is_initialized) csf_host.freeDeviceMemory();
 }
 
@@ -57,9 +56,6 @@ void SceneFlow::prepareRGBDImagePair(const cv::Mat &rgb, const cv::Mat &depth) {
 
 SceneFlow::SceneFlow() {
 	is_initialized = false;
-
-	max_iter = NULL;
-
 	dx = NULL;
 	dy = NULL;
 	dz = NULL;
@@ -84,7 +80,7 @@ SceneFlow::~SceneFlow() {
 void SceneFlow::initialize() {
 	cleanUp();
 
-	max_iter = (unsigned int *)malloc(ctf_levels*sizeof(unsigned int));
+	max_iter.resize(ctf_levels);
 	for (int i = ctf_levels - 1; i >= 0; i--) {
 		if (i >= ctf_levels - 1)
 			max_iter[i] = fine_max_iter;
@@ -176,7 +172,6 @@ void SceneFlow::getFlowImages(cv::Mat &vx, cv::Mat &vy, cv::Mat &vz) {
 	cv::Mat vx_tmp(cols, rows, CV_32F, dx);
 	cv::Mat vy_tmp(cols, rows, CV_32F, dy);
 	cv::Mat vz_tmp(cols, rows, CV_32F, dz);
-
 	vx = vx_tmp.t();
 	vy = vy_tmp.t();
 	vz = vz_tmp.t();
@@ -190,7 +185,6 @@ void SceneFlow::getFlowImage(cv::Mat &flow) {
 
 cv::Mat SceneFlow::getFlowVisualizationImage() {
 	cv::Mat vis_image(rows, cols, CV_8UC3);
-
 	float maxmodx = 0.f, maxmody = 0.f, maxmodz = 0.f;
 	for (unsigned int v = 0; v < rows; v++) {
 		for (unsigned int u = 0; u < cols; u++) {
@@ -199,7 +193,6 @@ cv::Mat SceneFlow::getFlowVisualizationImage() {
 			if (fabs(dz[v + u*rows]) > maxmodz) maxmodz = std::abs(dz[v + u*rows]);
 		}
 	}
-
 	for (unsigned int v = 0; v < rows; v++) {
 		for (unsigned int u = 0; u < cols; u++) {
 			vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmodx);
@@ -207,7 +200,6 @@ cv::Mat SceneFlow::getFlowVisualizationImage() {
 			vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmodz);
 		}
 	}
-
 	return vis_image;
 }
 
