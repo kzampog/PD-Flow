@@ -185,21 +185,36 @@ void SceneFlow::getFlowImage(cv::Mat &flow) {
 
 cv::Mat SceneFlow::getFlowVisualizationImage() {
 	cv::Mat vis_image(rows, cols, CV_8UC3);
-	float maxmodx = 0.f, maxmody = 0.f, maxmodz = 0.f;
-	for (unsigned int v = 0; v < rows; v++) {
-		for (unsigned int u = 0; u < cols; u++) {
-			if (fabs(dx[v + u*rows]) > maxmodx) maxmodx = std::abs(dx[v + u*rows]);
-			if (fabs(dy[v + u*rows]) > maxmody) maxmody = std::abs(dy[v + u*rows]);
-			if (fabs(dz[v + u*rows]) > maxmodz) maxmodz = std::abs(dz[v + u*rows]);
-		}
-	}
-	for (unsigned int v = 0; v < rows; v++) {
-		for (unsigned int u = 0; u < cols; u++) {
-			vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmodx);
-			vis_image.at<cv::Vec3b>(v,u)[1] = static_cast<unsigned char>(255.f * std::abs(dy[v + u*rows])/maxmody);
-			vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmodz);
-		}
-	}
+//	float maxmodx = 0.f, maxmody = 0.f, maxmodz = 0.f;
+//	for (unsigned int v = 0; v < rows; v++) {
+//		for (unsigned int u = 0; u < cols; u++) {
+//			if (std::abs(dx[v + u*rows]) > maxmodx) maxmodx = std::abs(dx[v + u*rows]);
+//			if (std::abs(dy[v + u*rows]) > maxmody) maxmody = std::abs(dy[v + u*rows]);
+//			if (std::abs(dz[v + u*rows]) > maxmodz) maxmodz = std::abs(dz[v + u*rows]);
+//		}
+//	}
+//	for (unsigned int v = 0; v < rows; v++) {
+//		for (unsigned int u = 0; u < cols; u++) {
+//			vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmodx);
+//			vis_image.at<cv::Vec3b>(v,u)[1] = static_cast<unsigned char>(255.f * std::abs(dy[v + u*rows])/maxmody);
+//			vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmodz);
+//		}
+//	}
+    float maxmod = 0.f;
+    for (unsigned int v = 0; v < rows; v++) {
+        for (unsigned int u = 0; u < cols; u++) {
+            if (std::abs(dx[v + u*rows]) > maxmod) maxmod = std::abs(dx[v + u*rows]);
+            if (std::abs(dy[v + u*rows]) > maxmod) maxmod = std::abs(dy[v + u*rows]);
+            if (std::abs(dz[v + u*rows]) > maxmod) maxmod = std::abs(dz[v + u*rows]);
+        }
+    }
+    for (unsigned int v = 0; v < rows; v++) {
+        for (unsigned int u = 0; u < cols; u++) {
+            vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmod);
+            vis_image.at<cv::Vec3b>(v,u)[1] = static_cast<unsigned char>(255.f * std::abs(dy[v + u*rows])/maxmod);
+            vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmod);
+        }
+    }
 	return vis_image;
 }
 
