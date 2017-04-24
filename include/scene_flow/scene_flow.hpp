@@ -1,7 +1,7 @@
 #ifndef SCENE_FLOW_HPP
 #define SCENE_FLOW_HPP
 
-#include <pdflow_cudalib.h>
+#include <scene_flow/pdflow_cudalib.h>
 #include <opencv2/core/core.hpp>
 
 class SceneFlow {
