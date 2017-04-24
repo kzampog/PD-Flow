@@ -8,6 +8,8 @@ endif(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
 
 include_directories(include)
 
+set(cuda_src src/pdflow_cudalib.cu)
+
 ################
 # Core library #
 ################
@@ -15,17 +17,20 @@ include_directories(include)
 find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 # set(CUDA_NVCC_FLAGS "-arch=sm_20")
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}  "-Xcompiler;-fPIC;")
 
-cuda_add_library(pdflow_cudalib src/pdflow_cudalib.cu SHARED)
+cuda_add_library(pdflow_cudalib ${cuda_src} SHARED)
 
 ###################
 # Library wrapper #
 ###################
 
 find_package(OpenCV REQUIRED)
-
-add_library(scene_flow SHARED src/scene_flow.cpp)
-target_link_libraries(scene_flow ${OpenCV_LIBS} ${CUDA_LIBRARIES} pdflow_cudalib)
+cuda_compile(cuda_objs ${cuda_src})
+add_library(scene_flow SHARED ${cuda_src} ${cuda_objs} src/scene_flow.cpp)
+target_link_libraries(scene_flow ${OpenCV_LIBS} ${CUDA_LIBRARIES})
+# add_library(scene_flow SHARED src/scene_flow.cpp)
+# target_link_libraries(scene_flow ${OpenCV_LIBS} ${CUDA_LIBRARIES} pdflow_cudalib)
 
 #################
 # Bundled demos #
