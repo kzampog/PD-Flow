@@ -28,5 +28,8 @@
 *.out
 *.app
 
-# Build folder
+# Build/IDE folders
 build/*
+.idea/*
+cmake-build-debug/*
+cmake-build-release/*
