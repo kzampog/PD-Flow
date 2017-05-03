@@ -30,35 +30,71 @@ void SceneFlow::cleanUp() {
 	if (dx) free(dx);
 	if (dy) free(dy);
 	if (dz) free(dz);
+	if (image_buffer) free(image_buffer);
+	if (depth_buffer) free(depth_buffer);
 	if (is_initialized) csf_host.freeDeviceMemory();
 }
 
-void SceneFlow::prepareRGBDImagePair(const cv::Mat &rgb, const cv::Mat &depth) {
-	cv::Mat intensity_tmp, depth_tmp;
+void SceneFlow::prepareRGBDImagePair(unsigned char * image, unsigned char * depth, const ImageType &image_type, const ImageType &depth_type) {
+	if (image_type == SceneFlow::GRAY8) {
+		for (int u = 0; u < width; u++) {
+			for (int v = 0; v < height; v++) {
+				image_buffer[u*height + v] = float(image[v*width + u]);
+			}
+		}
+	} else if (image_type == SceneFlow::BGR8) {
+		for (int u = 0; u < width; u++) {
+			for (int v = 0; v < height; v++) {
+				image_buffer[u*height + v] = 0.114f*float(image[3*v*width + 3*u + 0]) + 0.587f*float(image[3*v*width + 3*u + 1]) + 0.299f*float(image[3*v*width + 3*u + 2]);
+			}
+		}
+	}
 
-	if (rgb.channels() > 1) {
-		cv::cvtColor(rgb, intensity_tmp, CV_BGR2GRAY);
-	} else {
-		rgb.copyTo(intensity_tmp);
+	if (depth_type == SceneFlow::DEPTH16) {
+		unsigned short * depth_data = (unsigned short *)depth;
+		for (int u = 0; u < width; u++) {
+			for (int v = 0; v < height; v++) {
+				depth_buffer[u*height + v] = float(depth_data[v*width + u])/1000.0f;
+			}
+		}
+	} else if (depth_type == SceneFlow::DEPTH32) {
+		float * depth_data = (float *)depth;
+		for (int u = 0; u < width; u++) {
+			for (int v = 0; v < height; v++) {
+				depth_buffer[u*height + v] = depth_data[v*width + u];
+			}
+		}
 	}
-	if (intensity_tmp.type() == CV_8U) {
-		intensity_tmp.convertTo(intensity_tmp, CV_32F);
-	}
-	intensity_img_buffer = intensity_tmp.t();
-
-	if (depth.type() == CV_16U) {
-		depth.convertTo(depth_tmp, CV_32F, 0.001);
-	} else {
-		depth.copyTo(depth_tmp);
-	}
-	depth_img_buffer = depth_tmp.t();
 }
+
+//void SceneFlow::prepareRGBDImagePair(const cv::Mat &rgb, const cv::Mat &depth) {
+//	cv::Mat intensity_tmp, depth_tmp;
+//
+//	if (rgb.channels() > 1) {
+//		cv::cvtColor(rgb, intensity_tmp, CV_BGR2GRAY);
+//	} else {
+//		rgb.copyTo(intensity_tmp);
+//	}
+//	if (intensity_tmp.type() == CV_8U) {
+//		intensity_tmp.convertTo(intensity_tmp, CV_32F);
+//	}
+//	intensity_img_buffer = intensity_tmp.t();
+//
+//	if (depth.type() == CV_16U) {
+//		depth.convertTo(depth_tmp, CV_32F, 0.001);
+//	} else {
+//		depth.copyTo(depth_tmp);
+//	}
+//	depth_img_buffer = depth_tmp.t();
+//}
 
 SceneFlow::SceneFlow() {
 	is_initialized = false;
 	dx = NULL;
 	dy = NULL;
 	dz = NULL;
+	image_buffer = NULL;
+	depth_buffer = NULL;
 
 	int v_mask[5] = {1,4,6,4,1};
 	for (unsigned int i = 0; i < 5; i++) {
@@ -88,9 +124,12 @@ void SceneFlow::initialize() {
 			max_iter[i] = (max_iter[i+1]-15 > 15) ? (max_iter[i+1]-15) : 15;
 	}
 
-	dx = (float *) malloc(sizeof(float)*rows*cols);
-	dy = (float *) malloc(sizeof(float)*rows*cols);
-	dz = (float *) malloc(sizeof(float)*rows*cols);
+	dx = (float *) malloc(rows*cols*sizeof(float));
+	dy = (float *) malloc(rows*cols*sizeof(float));
+	dz = (float *) malloc(rows*cols*sizeof(float));
+
+	image_buffer = (float *) malloc(width*height*sizeof(float));
+	depth_buffer = (float *) malloc(width*height*sizeof(float));
 
 	csf_host.readParameters(width, height, fx, fy, cx, cy, rows, cols, ctf_levels, g_mask, lambda_i, lambda_d, mu);
 	csf_host.allocateDevMemory();
@@ -98,21 +137,37 @@ void SceneFlow::initialize() {
 	is_initialized = true;
 }
 
-void SceneFlow::loadRGBDFrames(const cv::Mat &rgb1, const cv::Mat &depth1, const cv::Mat &rgb2, const cv::Mat &depth2) {
+void SceneFlow::loadRGBDFrames(unsigned char * image1, unsigned char * depth1, unsigned char * image2, unsigned char * depth2, const ImageType &image_type, const ImageType &depth_type) {
 	unsigned int pyr_levels = static_cast<unsigned int>(log2(float(width/cols))) + ctf_levels;
 
-	prepareRGBDImagePair(rgb1, depth1);
-	csf_host.copyNewFrames((float *)(intensity_img_buffer.data), (float *)(depth_img_buffer.data));
+	prepareRGBDImagePair(image1, depth1, image_type, depth_type);
+	csf_host.copyNewFrames(image_buffer, depth_buffer);
 	csf_device = ObjectToDevice(&csf_host);
 	GaussianPyramidBridge(csf_device, pyr_levels, width, height);
 	BridgeBack(&csf_host, csf_device);
 
-	prepareRGBDImagePair(rgb2, depth2);
-	csf_host.copyNewFrames((float *)(intensity_img_buffer.data), (float *)(depth_img_buffer.data));
+	prepareRGBDImagePair(image2, depth2, image_type, depth_type);
+	csf_host.copyNewFrames(image_buffer, depth_buffer);
 	csf_device = ObjectToDevice(&csf_host);
 	GaussianPyramidBridge(csf_device, pyr_levels, width, height);
 	BridgeBack(&csf_host, csf_device);
 }
+
+//void SceneFlow::loadRGBDFrames(const cv::Mat &rgb1, const cv::Mat &depth1, const cv::Mat &rgb2, const cv::Mat &depth2) {
+//	unsigned int pyr_levels = static_cast<unsigned int>(log2(float(width/cols))) + ctf_levels;
+//
+//	prepareRGBDImagePair(rgb1, depth1);
+//	csf_host.copyNewFrames((float *)(intensity_img_buffer.data), (float *)(depth_img_buffer.data));
+//	csf_device = ObjectToDevice(&csf_host);
+//	GaussianPyramidBridge(csf_device, pyr_levels, width, height);
+//	BridgeBack(&csf_host, csf_device);
+//
+//	prepareRGBDImagePair(rgb2, depth2);
+//	csf_host.copyNewFrames((float *)(intensity_img_buffer.data), (float *)(depth_img_buffer.data));
+//	csf_device = ObjectToDevice(&csf_host);
+//	GaussianPyramidBridge(csf_device, pyr_levels, width, height);
+//	BridgeBack(&csf_host, csf_device);
+//}
 
 void SceneFlow::computeFlow() {
 	unsigned int s;
@@ -168,55 +223,75 @@ void SceneFlow::computeFlow() {
 	}
 }
 
-void SceneFlow::getFlowImages(cv::Mat &vx, cv::Mat &vy, cv::Mat &vz) {
-	cv::Mat vx_tmp(cols, rows, CV_32F, dx);
-	cv::Mat vy_tmp(cols, rows, CV_32F, dy);
-	cv::Mat vz_tmp(cols, rows, CV_32F, dz);
-	vx = vx_tmp.t();
-	vy = vy_tmp.t();
-	vz = vz_tmp.t();
+void SceneFlow::getFlowField(float * x, float * y, float * z) {
+	for (int v = 0; v < rows; v++) {
+		for (int u = 0; u < cols; u++) {
+			x[cols*v + u] = dx[u*rows + v];
+			y[cols*v + u] = dy[u*rows + v];
+			z[cols*v + u] = dz[u*rows + v];
+		}
+	}
 }
 
-void SceneFlow::getFlowImage(cv::Mat &flow) {
-	std::vector<cv::Mat> channels(3);
-	getFlowImages(channels[0], channels[1], channels[2]);
-	cv::merge(channels, flow);
+void SceneFlow::getFlowField(float * xyz) {
+	for (int v = 0; v < rows; v++) {
+		for (int u = 0; u < cols; u++) {
+			xyz[cols*v*3 + u*3 + 0] = dx[u*rows + v];
+			xyz[cols*v*3 + u*3 + 1] = dy[u*rows + v];
+			xyz[cols*v*3 + u*3 + 2] = dz[u*rows + v];
+		}
+	}
 }
 
-cv::Mat SceneFlow::getFlowVisualizationImage() {
-	cv::Mat vis_image(rows, cols, CV_8UC3);
-//	float maxmodx = 0.f, maxmody = 0.f, maxmodz = 0.f;
-//	for (unsigned int v = 0; v < rows; v++) {
-//		for (unsigned int u = 0; u < cols; u++) {
-//			if (std::abs(dx[v + u*rows]) > maxmodx) maxmodx = std::abs(dx[v + u*rows]);
-//			if (std::abs(dy[v + u*rows]) > maxmody) maxmody = std::abs(dy[v + u*rows]);
-//			if (std::abs(dz[v + u*rows]) > maxmodz) maxmodz = std::abs(dz[v + u*rows]);
-//		}
-//	}
-//	for (unsigned int v = 0; v < rows; v++) {
-//		for (unsigned int u = 0; u < cols; u++) {
-//			vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmodx);
-//			vis_image.at<cv::Vec3b>(v,u)[1] = static_cast<unsigned char>(255.f * std::abs(dy[v + u*rows])/maxmody);
-//			vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmodz);
-//		}
-//	}
-    float maxmod = 0.f;
-    for (unsigned int v = 0; v < rows; v++) {
-        for (unsigned int u = 0; u < cols; u++) {
-            if (std::abs(dx[v + u*rows]) > maxmod) maxmod = std::abs(dx[v + u*rows]);
-            if (std::abs(dy[v + u*rows]) > maxmod) maxmod = std::abs(dy[v + u*rows]);
-            if (std::abs(dz[v + u*rows]) > maxmod) maxmod = std::abs(dz[v + u*rows]);
-        }
-    }
-    for (unsigned int v = 0; v < rows; v++) {
-        for (unsigned int u = 0; u < cols; u++) {
-            vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmod);
-            vis_image.at<cv::Vec3b>(v,u)[1] = static_cast<unsigned char>(255.f * std::abs(dy[v + u*rows])/maxmod);
-            vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmod);
-        }
-    }
-	return vis_image;
-}
+//void SceneFlow::getFlowImages(cv::Mat &vx, cv::Mat &vy, cv::Mat &vz) {
+//	cv::Mat vx_tmp(cols, rows, CV_32F, dx);
+//	cv::Mat vy_tmp(cols, rows, CV_32F, dy);
+//	cv::Mat vz_tmp(cols, rows, CV_32F, dz);
+//	vx = vx_tmp.t();
+//	vy = vy_tmp.t();
+//	vz = vz_tmp.t();
+//}
+
+//void SceneFlow::getFlowImage(cv::Mat &flow) {
+//	std::vector<cv::Mat> channels(3);
+//	getFlowImages(channels[0], channels[1], channels[2]);
+//	cv::merge(channels, flow);
+//}
+
+//cv::Mat SceneFlow::getFlowVisualizationImage() {
+//	cv::Mat vis_image(rows, cols, CV_8UC3);
+////	float maxmodx = 0.f, maxmody = 0.f, maxmodz = 0.f;
+////	for (unsigned int v = 0; v < rows; v++) {
+////		for (unsigned int u = 0; u < cols; u++) {
+////			if (std::abs(dx[v + u*rows]) > maxmodx) maxmodx = std::abs(dx[v + u*rows]);
+////			if (std::abs(dy[v + u*rows]) > maxmody) maxmody = std::abs(dy[v + u*rows]);
+////			if (std::abs(dz[v + u*rows]) > maxmodz) maxmodz = std::abs(dz[v + u*rows]);
+////		}
+////	}
+////	for (unsigned int v = 0; v < rows; v++) {
+////		for (unsigned int u = 0; u < cols; u++) {
+////			vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmodx);
+////			vis_image.at<cv::Vec3b>(v,u)[1] = static_cast<unsigned char>(255.f * std::abs(dy[v + u*rows])/maxmody);
+////			vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmodz);
+////		}
+////	}
+//    float maxmod = 0.f;
+//    for (unsigned int v = 0; v < rows; v++) {
+//        for (unsigned int u = 0; u < cols; u++) {
+//            if (std::abs(dx[v + u*rows]) > maxmod) maxmod = std::abs(dx[v + u*rows]);
+//            if (std::abs(dy[v + u*rows]) > maxmod) maxmod = std::abs(dy[v + u*rows]);
+//            if (std::abs(dz[v + u*rows]) > maxmod) maxmod = std::abs(dz[v + u*rows]);
+//        }
+//    }
+//    for (unsigned int v = 0; v < rows; v++) {
+//        for (unsigned int u = 0; u < cols; u++) {
+//            vis_image.at<cv::Vec3b>(v,u)[0] = static_cast<unsigned char>(255.f * std::abs(dx[v + u*rows])/maxmod);
+//            vis_image.at<cv::Vec3b>(v,u)[1] = static_cast<unsigned char>(255.f * std::abs(dy[v + u*rows])/maxmod);
+//            vis_image.at<cv::Vec3b>(v,u)[2] = static_cast<unsigned char>(255.f * std::abs(dz[v + u*rows])/maxmod);
+//        }
+//    }
+//	return vis_image;
+//}
 
 void SceneFlow::setRGBDImageParameters(unsigned int im_width, unsigned int im_height, float intr_fx, float intr_fy, float intr_cx, float intr_cy) {
 	width = im_width;
