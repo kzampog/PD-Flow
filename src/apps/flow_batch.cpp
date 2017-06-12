@@ -61,9 +61,6 @@ private:
 
 int main(int argc, char** argv) {
 
-    Eigen::Matrix3f K;
-    K << 528, 0, 320, 0, 528, 240, 0, 0, 1;
-
     RGBDReader reader(argv[1], argv[2]);
 
     char buff[1000];
