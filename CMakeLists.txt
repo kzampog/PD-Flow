@@ -38,6 +38,39 @@ target_link_libraries(scene_flow ${CUDA_LIBRARIES})
 # Bundled demos #
 #################
 
+# set(DEFAULT_BUILD_FLOW_BATCH ON)
+# set(BUILD_FLOW_BATCH ${DEFAULT_BUILD_FLOW_BATCH} CACHE BOOL "Build tool that computes flow from RGBD images that uses OpenCV")
+
+# #Build the scene flow evaluator
+# IF (BUILD_FLOW_BATCH)
+# 	get_filename_component(EIGEN_ROOT "/usr/include/local/eigen3" PATH)
+# 	if(PKG_CONFIG_FOUND)
+# 		pkg_check_modules(PC_EIGEN eigen3)
+# 	endif(PKG_CONFIG_FOUND)
+# 	find_path(EIGEN_INCLUDE_DIRS Eigen/Core HINTS ${PC_EIGEN_INCLUDEDIR} ${PC_EIGEN_INCLUDE_DIRS}"${EIGEN_ROOT}" "$ENV{EIGEN_ROOT}"	PATHS "$ENV{PROGRAMFILES}/Eigen 3.0.0" "$ENV{PROGRAMW6432}/Eigen 3.0.0"	"$ENV{PROGRAMFILES}/Eigen" "$ENV{PROGRAMW6432}/Eigen"	PATH_SUFFIXES eigen3 include/eigen3 include)
+# 	find_package_handle_standard_args(eigen DEFAULT_MSG EIGEN_INCLUDE_DIRS)
+# 	set(EIGEN_DEFINITIONS ${EIGEN_DEFINITIONS} -DEIGEN_USE_NEW_STDVECTOR 
+# 	-DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)
+
+# 	include_directories(${EIGEN_INCLUDE_DIRS})
+
+# 	find_package(OpenCV REQUIRED)
+# 	find_package(HDF5 COMPONENTS C CXX HL REQUIRED)
+
+# 	include_directories(${OpenCV_INCLUDE_DIRS})
+# 	include_directories(${HDF5_INCLUDE_DIRS})
+# 	link_directories(${HDF5_LIBRARY_DIRS})
+	
+# 	add_executable(flow_batch
+# 		src/apps/flow_batch.cpp)
+		
+# 	target_link_libraries(flow_batch
+# 			${OpenCV_LIBS}
+# 			${CUDA_LIBRARIES}
+# 			scene_flow
+# 			${HDF5_CXX_LIBRARIES})
+# ENDIF (BUILD_FLOW_BATCH)
+
 # SET(DEFAULT_BUILD_EVALUATOR ON)
 # SET(BUILD_EVALUATOR ${DEFAULT_BUILD_EVALUATOR} CACHE BOOL "Build the scene flow evaluator for a RGB-D frame pair that uses OpenCV")
 
