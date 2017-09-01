@@ -1,6 +1,6 @@
 #include <scene_flow/scene_flow.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-//#include <cmath>
+#include <cmath>
+//#include <opencv2/imgproc/imgproc.hpp>
 
 //#include <iostream>
 
@@ -35,14 +35,20 @@ void SceneFlow::cleanUp() {
 	if (is_initialized) csf_host.freeDeviceMemory();
 }
 
-void SceneFlow::prepareRGBDImagePair(unsigned char * image, unsigned char * depth, const ImageType &image_type, const ImageType &depth_type) {
+void SceneFlow::prepareRGBDImagePair(const unsigned char * image, const unsigned char * depth, const ImageType &image_type, const ImageType &depth_type) {
 	if (image_type == SceneFlow::GRAY8) {
 		for (int u = 0; u < width; u++) {
 			for (int v = 0; v < height; v++) {
 				image_buffer[u*height + v] = float(image[v*width + u]);
 			}
 		}
-	} else if (image_type == SceneFlow::BGR8) {
+	} else if (image_type == SceneFlow::RGB24) {
+		for (int u = 0; u < width; u++) {
+			for (int v = 0; v < height; v++) {
+				image_buffer[u*height + v] = 0.299f*float(image[3*v*width + 3*u + 0]) + 0.587f*float(image[3*v*width + 3*u + 1]) + 0.114f*float(image[3*v*width + 3*u + 2]);
+			}
+		}
+	} else if (image_type == SceneFlow::BGR24) {
 		for (int u = 0; u < width; u++) {
 			for (int v = 0; v < height; v++) {
 				image_buffer[u*height + v] = 0.114f*float(image[3*v*width + 3*u + 0]) + 0.587f*float(image[3*v*width + 3*u + 1]) + 0.299f*float(image[3*v*width + 3*u + 2]);
@@ -137,7 +143,7 @@ void SceneFlow::initialize() {
 	is_initialized = true;
 }
 
-void SceneFlow::loadRGBDFrames(unsigned char * image1, unsigned char * depth1, unsigned char * image2, unsigned char * depth2, const ImageType &image_type, const ImageType &depth_type) {
+void SceneFlow::loadRGBDFrames(const unsigned char * image1, const unsigned char * depth1, const unsigned char * image2, const unsigned char * depth2, const ImageType &image_type, const ImageType &depth_type) {
 	unsigned int pyr_levels = static_cast<unsigned int>(log2(float(width/cols))) + ctf_levels;
 
 	prepareRGBDImagePair(image1, depth1, image_type, depth_type);

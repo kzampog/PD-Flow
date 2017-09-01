@@ -1,5 +1,4 @@
-#ifndef SCENE_FLOW_HPP
-#define SCENE_FLOW_HPP
+#pragma once
 
 #include <scene_flow/pdflow_cudalib.h>
 #include <vector>
@@ -7,12 +6,12 @@
 
 class SceneFlow {
 public:
-	enum ImageType {BGR8, GRAY8, DEPTH16, DEPTH32};
+	enum ImageType {RGB24, BGR24, GRAY8, DEPTH16, DEPTH32};
 
 	SceneFlow();
 	~SceneFlow();
 
-	void loadRGBDFrames(unsigned char * image1, unsigned char * depth1, unsigned char * image2, unsigned char * depth2, const ImageType &image_type = GRAY8, const ImageType &depth_type = DEPTH16);
+	void loadRGBDFrames(const unsigned char * image1, const unsigned char * depth1, const unsigned char * image2, const unsigned char * depth2, const ImageType &image_type = GRAY8, const ImageType &depth_type = DEPTH16);
 //	void loadRGBDFrames(const cv::Mat &rgb1, const cv::Mat &depth1, const cv::Mat &rgb2, const cv::Mat &depth2);
 
 	void computeFlow();
@@ -47,8 +46,6 @@ private:
 
 	void initialize();
 	void cleanUp();
-	void prepareRGBDImagePair(unsigned char * image, unsigned char * depth, const ImageType &image_type = GRAY8, const ImageType &depth_type = DEPTH16);
+	void prepareRGBDImagePair(const unsigned char * image, const unsigned char * depth, const ImageType &image_type = GRAY8, const ImageType &depth_type = DEPTH16);
 //	void prepareRGBDImagePair(const cv::Mat &rgb, const cv::Mat &depth);
 };
-
-#endif /* SCENE_FLOW_HPP */
