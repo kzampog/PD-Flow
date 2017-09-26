@@ -21,7 +21,7 @@
 **																			**
 *****************************************************************************/
 
-#include <scene_flow/pdflow_cudalib.h>
+#include <pd_flow/pdflow_cudalib.h>
 
 
 //                         Memory allocation - device
