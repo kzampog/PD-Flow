@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 project(PDFlow)
 
-set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
+
+set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-O3 -march=native")
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-O3 -march=native")
 
 find_package(CUDA REQUIRED)
 
@@ -23,8 +27,6 @@ append_target_arch_flags()
 list(APPEND CUDA_NVCC_FLAGS "-O3;-Xcompiler;-fPIC;-std=c++11")
 
 cuda_compile(cuda_objs ${cuda_src})
-
-set(CMAKE_CXX_FLAGS ${ADDITIONAL_CMAKE_CXX_FLAGS} "-O3 -msse2 -msse3 -std=c++11")
 
 add_library(${PROJECT_NAME} SHARED ${cuda_src} ${cuda_objs} ${cpp_src})
 target_link_libraries(${PROJECT_NAME} ${CUDA_LIBRARIES})
