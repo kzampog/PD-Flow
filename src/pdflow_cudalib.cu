@@ -125,7 +125,7 @@ __host__ void CSF_cuda::allocateMemoryNewLevel(unsigned int rows_loc, unsigned i
     //Allocate ri, rj, ri_2, rj_2, du_prev, dv_prev on GPU
     cudaMalloc((void**)&ri_dev, rows_i*cols_i*sizeof(float) );
     cudaMalloc((void**)&rj_dev, rows_i*cols_i*sizeof(float) );
-	cudaMalloc((void**)&ri_2_dev, rows_i*cols_i*sizeof(float) );
+    cudaMalloc((void**)&ri_2_dev, rows_i*cols_i*sizeof(float) );
     cudaMalloc((void**)&rj_2_dev, rows_i*cols_i*sizeof(float) );
     cudaMalloc((void**)&du_prev_dev, rows_i*cols_i*sizeof(float) );
     cudaMalloc((void**)&dv_prev_dev, rows_i*cols_i*sizeof(float) );
@@ -224,25 +224,25 @@ __host__ void CSF_cuda::copyNewFrames(float *colour_wf, float *depth_wf)
     cudaMemcpy(depth_wf_dev, depth_wf, width*height*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(colour_wf_dev, colour_wf, width*height*sizeof(float), cudaMemcpyHostToDevice);
 
-	//Swap pointers of old and new images of the pyramid (equivalent to pushing the new frames to the old ones)
-	for (unsigned int i=0; i<8; i++)
-	{
-		float *temp = colour_old_dev[i];
-		colour_old_dev[i] = colour_dev[i];
-		colour_dev[i] = temp;
+    //Swap pointers of old and new images of the pyramid (equivalent to pushing the new frames to the old ones)
+    for (unsigned int i=0; i<8; i++)
+    {
+        float *temp = colour_old_dev[i];
+        colour_old_dev[i] = colour_dev[i];
+        colour_dev[i] = temp;
 
-		temp = depth_old_dev[i];
-		depth_old_dev[i] = depth_dev[i];
-		depth_dev[i] = temp;
+        temp = depth_old_dev[i];
+        depth_old_dev[i] = depth_dev[i];
+        depth_dev[i] = temp;
 
-		temp = xx_old_dev[i];
-		xx_old_dev[i] = xx_dev[i];
-		xx_dev[i] = temp;
+        temp = xx_old_dev[i];
+        xx_old_dev[i] = xx_dev[i];
+        xx_dev[i] = temp;
 
-		temp = yy_old_dev[i];
-		yy_old_dev[i] = yy_dev[i];
-		yy_dev[i] = temp;
-	}	
+        temp = yy_old_dev[i];
+        yy_old_dev[i] = yy_dev[i];
+        yy_dev[i] = temp;
+    }
 }
 
 __host__ void CSF_cuda::copyAllSolutions(float *dx, float *dy, float *dz, float *depth, float *depth_old, float *colour, float *colour_old, float *xx, float *xx_old, float *yy, float *yy_old)
@@ -257,7 +257,7 @@ __host__ void CSF_cuda::copyAllSolutions(float *dx, float *dy, float *dz, float 
     cudaMemcpy(xx, xx_dev[level_image], rows_i*cols_i*sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(xx_old, xx_old_dev[level_image], rows_i*cols_i*sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(yy, yy_dev[level_image], rows_i*cols_i*sizeof(float), cudaMemcpyDeviceToHost);
-	cudaMemcpy(yy_old, yy_old_dev[level_image], rows_i*cols_i*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(yy_old, yy_old_dev[level_image], rows_i*cols_i*sizeof(float), cudaMemcpyDeviceToHost);
 }
 
 __host__ void CSF_cuda::copyMotionField(float *dx, float *dy, float *dz)
@@ -351,13 +351,13 @@ __host__ void CSF_cuda::freeLevelVariables()
 __device__ void CSF_cuda::computePyramidLevel(unsigned int index, unsigned int level)
 {
     //Shared memory for the gaussian mask
-	__shared__ float mask_shared[25];
-	if (threadIdx.x < 25)			//Warning!!!!!! Number of threads should be higher than 25
-		mask_shared[threadIdx.x] = g_mask_dev[threadIdx.x];
-	__syncthreads();
+    __shared__ float mask_shared[25];
+    if (threadIdx.x < 25)			//Warning!!!!!! Number of threads should be higher than 25
+        mask_shared[threadIdx.x] = g_mask_dev[threadIdx.x];
+    __syncthreads();
 
-	
-	const float max_depth_dif = 0.1f;
+
+    const float max_depth_dif = 0.1f;
 
     //Calculate indices
     const unsigned int v = index%(rows_i);
@@ -377,13 +377,13 @@ __device__ void CSF_cuda::computePyramidLevel(unsigned int index, unsigned int l
     else
     {
         float sumd = 0.f, sumc = 0.f, acu_weights_d = 0.f, acu_weights_c = 0.f;
-		const unsigned int ind_cent_prev = 2*v + 4*u*rows_i;
-		const float dcenter = depth_dev[level-1][ind_cent_prev];
-		
-		//Inner pixels
+        const unsigned int ind_cent_prev = 2*v + 4*u*rows_i;
+        const float dcenter = depth_dev[level-1][ind_cent_prev];
+
+        //Inner pixels
         if ((v>0)&&(v<rows_i-1)&&(u>0)&&(u<cols_i-1))
-        {	
-			for (int k=-2; k<3; k++)
+        {
+            for (int k=-2; k<3; k++)
                 for (int l=-2; l<3; l++)
                 {
                     const unsigned int ind_loop_prev = 2*v+k + 2*(2*u+l)*rows_i;
@@ -403,10 +403,10 @@ __device__ void CSF_cuda::computePyramidLevel(unsigned int index, unsigned int l
 
             if (sumd > 0.f)
                 depth_dev[level][index] = sumd/acu_weights_d;
-			else
-				depth_dev[level][index] = 0.f;
+            else
+                depth_dev[level][index] = 0.f;
 
-			colour_dev[level][index] = sumc;
+            colour_dev[level][index] = sumc;
         }
 
         //Boundary
@@ -439,8 +439,8 @@ __device__ void CSF_cuda::computePyramidLevel(unsigned int index, unsigned int l
 
             if (sumd > 0.f)
                 depth_dev[level][index] = sumd/acu_weights_d;
-			else
-				depth_dev[level][index] = 0.f;
+            else
+                depth_dev[level][index] = 0.f;
         }
     }
 
@@ -507,13 +507,13 @@ __device__ void CSF_cuda::upsampleFilterPrevSolution(unsigned int index)
     const unsigned int v = index%rows_i;
     const unsigned int u = index/rows_i;
 
-	//Shared memory for the gaussian mask - Warning!! The number of threads should be higher than 25
-	__shared__ float mask_shared[25];
-	if (threadIdx.x < 25)			
-		mask_shared[threadIdx.x] = 4.f*g_mask_dev[threadIdx.x];
-	__syncthreads();
+    //Shared memory for the gaussian mask - Warning!! The number of threads should be higher than 25
+    __shared__ float mask_shared[25];
+    if (threadIdx.x < 25)
+        mask_shared[threadIdx.x] = 4.f*g_mask_dev[threadIdx.x];
+    __syncthreads();
 
-	float du = 0.f, dv = 0.f, dw = 0.f, pd = 0.f, puu = 0.f, puv = 0.f, pvu = 0.f, pvv = 0.f, pwu = 0.f, pwv = 0.f;
+    float du = 0.f, dv = 0.f, dw = 0.f, pd = 0.f, puu = 0.f, puv = 0.f, pvu = 0.f, pvv = 0.f, pwu = 0.f, pwv = 0.f;
 
     //Inner pixels
     if ((v>1)&&(v<rows_i-2)&&(u>1)&&(u<cols_i-2))
@@ -565,7 +565,7 @@ __device__ void CSF_cuda::upsampleFilterPrevSolution(unsigned int index)
                 }
             }
 
-		const float inv_acu_weight = fdividef(1.f, acu_weight);
+        const float inv_acu_weight = fdividef(1.f, acu_weight);
         du *= inv_acu_weight;
         dv *= inv_acu_weight;
         dw *= inv_acu_weight;
@@ -578,8 +578,8 @@ __device__ void CSF_cuda::upsampleFilterPrevSolution(unsigned int index)
         pwv *= inv_acu_weight;
     }
 
-	//Write results to global memory
-	du_prev_dev[index] = du;
+    //Write results to global memory
+    du_prev_dev[index] = du;
     dv_prev_dev[index] = dv;
     dw_new_dev[index]  = dw;
     pd_dev[index]  = pd;
@@ -616,15 +616,15 @@ __device__ void CSF_cuda::computeImGradients(unsigned int index)
     }
     else
     {
-		dcu_aux_dev[index] = (ri_2_dev[index]*(colour_dev[level_image][index+rows_i]-colour_dev[level_image][index])
-							+ ri_2_dev[index-rows_i]*(colour_dev[level_image][index]-colour_dev[level_image][index-rows_i]))
-							/(ri_2_dev[index]+ri_2_dev[index-rows_i]);
-		if (depth_dev[level_image][index] > 0.f)
-			ddu_aux_dev[index] = (ri_2_dev[index]*(depth_dev[level_image][index+rows_i]-depth_dev[level_image][index])
-								+ ri_2_dev[index-rows_i]*(depth_dev[level_image][index]-depth_dev[level_image][index-rows_i]))
-								/(ri_2_dev[index]+ri_2_dev[index-rows_i]);
-		else
-			ddu_aux_dev[index] = 0.f;
+        dcu_aux_dev[index] = (ri_2_dev[index]*(colour_dev[level_image][index+rows_i]-colour_dev[level_image][index])
+                            + ri_2_dev[index-rows_i]*(colour_dev[level_image][index]-colour_dev[level_image][index-rows_i]))
+                            /(ri_2_dev[index]+ri_2_dev[index-rows_i]);
+        if (depth_dev[level_image][index] > 0.f)
+            ddu_aux_dev[index] = (ri_2_dev[index]*(depth_dev[level_image][index+rows_i]-depth_dev[level_image][index])
+                                + ri_2_dev[index-rows_i]*(depth_dev[level_image][index]-depth_dev[level_image][index-rows_i]))
+                                /(ri_2_dev[index]+ri_2_dev[index-rows_i]);
+        else
+            ddu_aux_dev[index] = 0.f;
     }
 
     //Col gradients
@@ -640,15 +640,15 @@ __device__ void CSF_cuda::computeImGradients(unsigned int index)
     }
     else
     {
-		dcv_aux_dev[index] = (rj_2_dev[index]*(colour_dev[level_image][index+1]-colour_dev[level_image][index])
-							+ rj_2_dev[index-1]*(colour_dev[level_image][index]-colour_dev[level_image][index-1]))
-							/(rj_2_dev[index]+rj_2_dev[index-1]);
-		if (depth_dev[level_image][index] > 0.f)
-			ddv_aux_dev[index] = (rj_2_dev[index]*(depth_dev[level_image][index+1]-depth_dev[level_image][index])
-								+ rj_2_dev[index-1]*(depth_dev[level_image][index]-depth_dev[level_image][index-1]))
-								/(rj_2_dev[index]+rj_2_dev[index-1]);
-		else
-			ddv_aux_dev[index] = 0.f;
+        dcv_aux_dev[index] = (rj_2_dev[index]*(colour_dev[level_image][index+1]-colour_dev[level_image][index])
+                            + rj_2_dev[index-1]*(colour_dev[level_image][index]-colour_dev[level_image][index-1]))
+                            /(rj_2_dev[index]+rj_2_dev[index-1]);
+        if (depth_dev[level_image][index] > 0.f)
+            ddv_aux_dev[index] = (rj_2_dev[index]*(depth_dev[level_image][index+1]-depth_dev[level_image][index])
+                                + rj_2_dev[index-1]*(depth_dev[level_image][index]-depth_dev[level_image][index-1]))
+                                /(rj_2_dev[index]+rj_2_dev[index-1]);
+        else
+            ddv_aux_dev[index] = 0.f;
     }
 }
 
@@ -660,29 +660,29 @@ __device__ void CSF_cuda::performWarping(unsigned int index)
     float warped_pixel;
 
     //Intensity images
-	const float ind_uf = float(u) + du_prev_dev[index];
-	const float ind_vf = float(v) + dv_prev_dev[index];
+    const float ind_uf = float(u) + du_prev_dev[index];
+    const float ind_vf = float(v) + dv_prev_dev[index];
     warped_pixel = interpolatePixel(colour_dev[level_image], ind_uf, ind_vf);
     dct_dev[index] = warped_pixel - colour_old_dev[level_image][index];
     dcu_dev[index] = interpolatePixel(dcu_aux_dev, ind_uf, ind_vf);
     dcv_dev[index] = interpolatePixel(dcv_aux_dev, ind_uf, ind_vf);
 
-	//Depth images
-	warped_pixel = interpolatePixelDepth(depth_dev[level_image], ind_uf, ind_vf);
-	if (warped_pixel > 0.f)
-		ddt_dev[index] = warped_pixel - depth_old_dev[level_image][index];
-	else
-		ddt_dev[index] = 0.f;
-	ddu_dev[index] = interpolatePixel(ddu_aux_dev, ind_uf, ind_vf);
-	ddv_dev[index] = interpolatePixel(ddv_aux_dev, ind_uf, ind_vf);
+    //Depth images
+    warped_pixel = interpolatePixelDepth(depth_dev[level_image], ind_uf, ind_vf);
+    if (warped_pixel > 0.f)
+        ddt_dev[index] = warped_pixel - depth_old_dev[level_image][index];
+    else
+        ddt_dev[index] = 0.f;
+    ddu_dev[index] = interpolatePixel(ddu_aux_dev, ind_uf, ind_vf);
+    ddv_dev[index] = interpolatePixel(ddv_aux_dev, ind_uf, ind_vf);
 }
 
 __device__ float CSF_cuda::interpolatePixel(float *mat, float ind_u, float ind_v)
 {
     if (ind_u < 0.f) { ind_u = 0.f;}
-	else if (ind_u > cols_i - 1.f) { ind_u = cols_i - 1.f;}
-	if (ind_v < 0.f) { ind_v = 0.f;}
-	else if (ind_v > rows_i - 1.f) { ind_v = rows_i - 1.f;}
+    else if (ind_u > cols_i - 1.f) { ind_u = cols_i - 1.f;}
+    if (ind_v < 0.f) { ind_v = 0.f;}
+    else if (ind_v > rows_i - 1.f) { ind_v = rows_i - 1.f;}
 
     const unsigned int sup_u = __float2int_ru(ind_u);
     const unsigned int inf_u = __float2int_rd(ind_u);
@@ -710,9 +710,9 @@ __device__ float CSF_cuda::interpolatePixel(float *mat, float ind_u, float ind_v
 __device__ float CSF_cuda::interpolatePixelDepth(float *mat, float ind_u, float ind_v)
 {
     if (ind_u < 0.f) { ind_u = 0.f;}
-	else if (ind_u > cols_i - 1.f) { ind_u = cols_i - 1.f;}
-	if (ind_v < 0.f) { ind_v = 0.f;}
-	else if (ind_v > rows_i - 1.f) { ind_v = rows_i - 1.f;}
+    else if (ind_u > cols_i - 1.f) { ind_u = cols_i - 1.f;}
+    if (ind_v < 0.f) { ind_v = 0.f;}
+    else if (ind_v > rows_i - 1.f) { ind_v = rows_i - 1.f;}
 
     const unsigned int sup_u = __float2int_ru(ind_u);
     const unsigned int inf_u = __float2int_rd(ind_u);
@@ -726,24 +726,24 @@ __device__ float CSF_cuda::interpolatePixelDepth(float *mat, float ind_u, float 
         return mat[rind_v + rows_i*rind_u];
     }
     else
-    {	
-		if ((sup_u == inf_u)&&(sup_v == inf_v))
-			return mat[lrintf(ind_v + rows_i*ind_u)];
+    {
+        if ((sup_u == inf_u)&&(sup_v == inf_v))
+            return mat[lrintf(ind_v + rows_i*ind_u)];
 
-		else if (sup_u == inf_u)
-			return (sup_v - ind_v)*mat[inf_v + rows_i*lroundf(ind_u)] + (ind_v - inf_v)*mat[sup_v + rows_i*lroundf(ind_u)];
+        else if (sup_u == inf_u)
+            return (sup_v - ind_v)*mat[inf_v + rows_i*lroundf(ind_u)] + (ind_v - inf_v)*mat[sup_v + rows_i*lroundf(ind_u)];
 
-		else if (sup_v == inf_v)
-			return (sup_u - ind_u)*mat[lroundf(ind_v) + rows_i*inf_u] + (ind_u - inf_u)*mat[lroundf(ind_v) + rows_i*sup_u];
+        else if (sup_v == inf_v)
+            return (sup_u - ind_u)*mat[lroundf(ind_v) + rows_i*inf_u] + (ind_u - inf_u)*mat[lroundf(ind_v) + rows_i*sup_u];
 
-		else
-		{
-			//First in u
-			const float val_sup_v = (sup_u - ind_u)*mat[sup_v + rows_i*inf_u] + (ind_u - inf_u)*mat[sup_v + rows_i*sup_u];
-			const float val_inf_v = (sup_u - ind_u)*mat[inf_v + rows_i*inf_u] + (ind_u - inf_u)*mat[inf_v + rows_i*sup_u];
-			return (sup_v - ind_v)*val_inf_v + (ind_v - inf_v)*val_sup_v;
-		}
-	}
+        else
+        {
+            //First in u
+            const float val_sup_v = (sup_u - ind_u)*mat[sup_v + rows_i*inf_u] + (ind_u - inf_u)*mat[sup_v + rows_i*sup_u];
+            const float val_inf_v = (sup_u - ind_u)*mat[inf_v + rows_i*inf_u] + (ind_u - inf_u)*mat[inf_v + rows_i*sup_u];
+            return (sup_v - ind_v)*val_inf_v + (ind_v - inf_v)*val_sup_v;
+        }
+    }
 }
 
 //                          Preliminary computations
@@ -760,26 +760,26 @@ __device__ void CSF_cuda::computeRij(unsigned int index)
     if (u == cols_i-1)
     {
         dxu = 0.f; dzu = 0.f;
-		dxu_2 = 0.f; dzu_2 = 0.f;
+        dxu_2 = 0.f; dzu_2 = 0.f;
     }
     else
     {
         dxu = xx_old_dev[level_image][index + rows_i] - xx_old_dev[level_image][index];
         dzu = depth_old_dev[level_image][index + rows_i] - depth_old_dev[level_image][index];
-		dxu_2 = xx_dev[level_image][index + rows_i] - xx_dev[level_image][index];
+        dxu_2 = xx_dev[level_image][index + rows_i] - xx_dev[level_image][index];
         dzu_2 = depth_dev[level_image][index + rows_i] - depth_dev[level_image][index];
     }
 
     if (v == rows_i-1)
     {
         dyv = 0.f; dzv = 0.f;
-		dyv_2 = 0.f; dzv_2 = 0.f;
+        dyv_2 = 0.f; dzv_2 = 0.f;
     }
     else
     {
         dyv = yy_old_dev[level_image][index+1] - yy_old_dev[level_image][index];
         dzv = depth_old_dev[level_image][index+1] - depth_old_dev[level_image][index];
-		dyv_2 = yy_dev[level_image][index+1] - yy_dev[level_image][index];
+        dyv_2 = yy_dev[level_image][index+1] - yy_dev[level_image][index];
         dzv_2 = depth_dev[level_image][index+1] - depth_dev[level_image][index];
     }
 
@@ -793,7 +793,7 @@ __device__ void CSF_cuda::computeRij(unsigned int index)
     else
         rj_dev[index] = 1.f;
 
-	if (fabsf(dxu_2) + fabsf(dzu_2) > 0.f)
+    if (fabsf(dxu_2) + fabsf(dzu_2) > 0.f)
         ri_2_dev[index] = 2.f*rhypotf(dxu_2,dzu_2);	//2.f/sqrtf(dxu*dxu + dzu*dzu);
     else
         ri_2_dev[index] = 1.f;
@@ -813,20 +813,20 @@ __device__ void CSF_cuda::computeStepSizes(unsigned int index)
 {
     //Load lambda from global memory
     const float lambdai = lambda_i, lambdad = lambda_d;
-	
-	sigma_pd_dev[index] = fdividef(1.f, mu_uv_dev[index]*(1.f + abs(ddu_dev[index]) + abs(ddv_dev[index])) + 1e-10f);
+
+    sigma_pd_dev[index] = fdividef(1.f, mu_uv_dev[index]*(1.f + abs(ddu_dev[index]) + abs(ddv_dev[index])) + 1e-10f);
     sigma_puvx_dev[index] = fdividef(0.5f, lambdai*ri_dev[index] + 1e-10f);
     sigma_puvy_dev[index] = fdividef(0.5f, lambdai*rj_dev[index] + 1e-10f);
     sigma_pwx_dev[index] = fdividef(0.5f, ri_dev[index]*lambdad + 1e-10f);
     sigma_pwy_dev[index] = fdividef(0.5f, rj_dev[index]*lambdad + 1e-10f);
 
-	//Calculate (v,u)
+    //Calculate (v,u)
     const unsigned int v = index%rows_i;
     const unsigned int u = index/rows_i;
 
-	float acu_r = ri_dev[index] + rj_dev[index];
-	if (u > 0) acu_r += ri_dev[index-rows_i];
-	if (v > 0) acu_r += rj_dev[index-1];
+    float acu_r = ri_dev[index] + rj_dev[index];
+    if (u > 0) acu_r += ri_dev[index-rows_i];
+    if (v > 0) acu_r += rj_dev[index-1];
 
     tau_u_dev[index] = fdividef(1.f, mu_uv_dev[index]*abs(ddu_dev[index]) + lambdai*acu_r + 1e-10f);
     tau_v_dev[index] = fdividef(1.f, mu_uv_dev[index]*abs(ddv_dev[index]) + lambdai*acu_r + 1e-10f);
@@ -838,10 +838,10 @@ __device__ void CSF_cuda::computeStepSizes(unsigned int index)
 //=============================================================================
 __device__ void CSF_cuda::updateDualVariables(unsigned int index)
 {
-	//Create aux variables to avoid repetitive global memory access
+    //Create aux variables to avoid repetitive global memory access
     float module_p;
-	float pd = pd_dev[index], puu = puu_dev[index], puv = puv_dev[index];
-	float pvu = pvu_dev[index], pvv = pvv_dev[index], pwu = pwu_dev[index], pwv = pwv_dev[index];
+    float pd = pd_dev[index], puu = puu_dev[index], puv = puv_dev[index];
+    float pvu = pvu_dev[index], pvv = pvv_dev[index], pwu = pwu_dev[index], pwv = pwv_dev[index];
 
     //Update dual variables
     //Solve pd
@@ -868,8 +868,8 @@ __device__ void CSF_cuda::updateDualVariables(unsigned int index)
         else
             pd_dev[index] = -1.f;
     }
-	else
-		pd_dev[index] = pd;
+    else
+        pd_dev[index] = pd;
 
     //Constrain pu
     module_p = rhypotf(puu, puv);	//1.f/sqrtf(puu*puu + puv*puv);
@@ -878,11 +878,11 @@ __device__ void CSF_cuda::updateDualVariables(unsigned int index)
         puu_dev[index] = puu*module_p;
         puv_dev[index] = puv*module_p;
     }
-	else
-	{
+    else
+    {
         puu_dev[index] = puu;
         puv_dev[index] = puv;
-	}
+    }
 
     //Constrain pv
     module_p = rhypotf(pvu, pvv);	//1.f/sqrtf(pvu*pvu + pvv*pvv);
@@ -891,11 +891,11 @@ __device__ void CSF_cuda::updateDualVariables(unsigned int index)
         pvu_dev[index] = pvu*module_p;
         pvv_dev[index] = pvv*module_p;
     }
-	else
-	{
+    else
+    {
         pvu_dev[index] = pvu;
         pvv_dev[index] = pvv;
-	}
+    }
 
     //Constrain pw
     module_p = rhypotf(pwu, pwv);	//1.f/sqrt(pwu*pwu + pwv*pwv);
@@ -904,22 +904,22 @@ __device__ void CSF_cuda::updateDualVariables(unsigned int index)
         pwu_dev[index] = pwu*module_p;
         pwv_dev[index] = pwv*module_p;
     }
-	else
-	{
+    else
+    {
         pwu_dev[index] = pwu;
         pwv_dev[index] = pwv;
-	}
+    }
 
 }
 
 __device__ void CSF_cuda::updatePrimalVariables(unsigned int index)
-{    
-	float du = du_new_dev[index], dv = dv_new_dev[index], dw = dw_new_dev[index];
+{
+    float du = du_new_dev[index], dv = dv_new_dev[index], dw = dw_new_dev[index];
     const float du_old = du, dv_old = dv, dw_old = dw;
-	
-	//Compute du, dv and dw
+
+    //Compute du, dv and dw
     //Solve du
-	du += - tau_u_dev[index]*(mu_uv_dev[index]*ddu_dev[index]*pd_dev[index] - lambda_i*divpu_dev[index]);
+    du += - tau_u_dev[index]*(mu_uv_dev[index]*ddu_dev[index]*pd_dev[index] - lambda_i*divpu_dev[index]);
 
     //Solve dv
     dv += - tau_v_dev[index]*(mu_uv_dev[index]*ddv_dev[index]*pd_dev[index] - lambda_i*divpv_dev[index]);
@@ -933,18 +933,18 @@ __device__ void CSF_cuda::updatePrimalVariables(unsigned int index)
     const float of_threshold = tau_u_dev[index]*dcu_dev[index]*dcu_dev[index] + tau_v_dev[index]*dcv_dev[index]*dcv_dev[index];
     if (optflow < -of_threshold)
     {
-		du += tau_u_dev[index]*dcu_dev[index];
+        du += tau_u_dev[index]*dcu_dev[index];
         dv += tau_v_dev[index]*dcv_dev[index];
     }
     else if (optflow > of_threshold)
     {
-		du -= tau_u_dev[index]*dcu_dev[index];
+        du -= tau_u_dev[index]*dcu_dev[index];
         dv -= tau_v_dev[index]*dcv_dev[index];
     }
     else
     {
         const float den = tau_u_dev[index]*dcu_dev[index]*dcu_dev[index] + tau_v_dev[index]*dcv_dev[index]*dcv_dev[index] + 1e-10f;
-		du -= tau_u_dev[index]*dcu_dev[index]*optflow/den;
+        du -= tau_u_dev[index]*dcu_dev[index]*optflow/den;
         dv -= tau_v_dev[index]*dcv_dev[index]*optflow/den;
     }
 
@@ -953,9 +953,9 @@ __device__ void CSF_cuda::updatePrimalVariables(unsigned int index)
     dv_acc_dev[index] = 2.f*dv - dv_old;
     dw_acc_dev[index] = 2.f*dw - dw_old;
 
-	du_new_dev[index] = du;
-	dv_new_dev[index] = dv;
-	dw_new_dev[index] = dw;
+    du_new_dev[index] = du;
+    dv_new_dev[index] = dv;
+    dw_new_dev[index] = dw;
 }
 
 __device__ void CSF_cuda::computeDivergence(unsigned int index)
@@ -1044,7 +1044,7 @@ __device__ void CSF_cuda::computeGradient(unsigned int index)
 __device__ void CSF_cuda::saturateVariables(unsigned int index)
 {
     float du = du_new_dev[index], dv = dv_new_dev[index], dw = dw_new_dev[index];
-	if (du > 1.f)
+    if (du > 1.f)
         du = 1.f;
     else if (du < -1.f)
         du = -1.f;
@@ -1057,30 +1057,30 @@ __device__ void CSF_cuda::saturateVariables(unsigned int index)
     if (depth_old_dev[level_image][index] == 0.f)
         dw = 0.f;
 
-	//Add previous solution to filter all together
-	du_new_dev[index] = du + du_prev_dev[index];
-	dv_new_dev[index] = dv + dv_prev_dev[index];
-	dw_new_dev[index] = dw;
+    //Add previous solution to filter all together
+    du_new_dev[index] = du + du_prev_dev[index];
+    dv_new_dev[index] = dv + dv_prev_dev[index];
+    dw_new_dev[index] = dw;
 }
 
 __device__ void CSF_cuda::filterSolution(unsigned int index)
 {
-	const float depth_old = depth_old_dev[level_image][index];
-	
-	//Calculate (v,u)
+    const float depth_old = depth_old_dev[level_image][index];
+
+    //Calculate (v,u)
     const unsigned int v = index%rows_i;
     const unsigned int u = index/rows_i;
 
-	//								Weighted median filter
-	//----------------------------------------------------------------------------------------
-	fieldAndPresence up[9], vp[9], wp[9];
+    //								Weighted median filter
+    //----------------------------------------------------------------------------------------
+    fieldAndPresence up[9], vp[9], wp[9];
     float pres_cum_u[9], pres_cum_v[9], pres_cum_w[9], pres_med;
     int indr, indc, ind_loop;
-	unsigned int point_count, v_index;
+    unsigned int point_count, v_index;
     const float kd = 5.f;
     const float kddt = 10.f;
 
-	if (depth_old > 0.f)
+    if (depth_old > 0.f)
     {
         point_count = 9;
         v_index = 0;
@@ -1090,7 +1090,7 @@ __device__ void CSF_cuda::filterSolution(unsigned int index)
             {
                 indr = v+k;
                 indc = u+l;
-				ind_loop = index + l*rows_i + k;
+                ind_loop = index + l*rows_i + k;
                 if ((indr < 0)||(indr >= rows_i)||(indc < 0)||(indc >= cols_i))
                 {
                     point_count--;
@@ -1099,70 +1099,70 @@ __device__ void CSF_cuda::filterSolution(unsigned int index)
 
                 //Compute weights
                 const float pres = 1.f/(1.f + kd*powf(depth_old - depth_old_dev[level_image][ind_loop],2.f) + kddt*powf(ddt_dev[ind_loop],2.f));
-						
-				up[v_index].field = du_new_dev[ind_loop]; up[v_index].pres = pres;
+
+                up[v_index].field = du_new_dev[ind_loop]; up[v_index].pres = pres;
                 vp[v_index].field = dv_new_dev[ind_loop]; vp[v_index].pres = pres;
                 wp[v_index].field = dw_new_dev[ind_loop]; wp[v_index].pres = pres;
                 v_index++;
             }
 
-		//Sort vectors (both the solution and the weights)
-		bubbleSortDev(up, point_count);
-		bubbleSortDev(vp, point_count);
-		bubbleSortDev(wp, point_count);
+        //Sort vectors (both the solution and the weights)
+        bubbleSortDev(up, point_count);
+        bubbleSortDev(vp, point_count);
+        bubbleSortDev(wp, point_count);
 
-		//Compute cumulative weight
-		pres_cum_u[0] = up[0].pres; pres_cum_v[0] = vp[0].pres; pres_cum_w[0] = wp[0].pres;
-		for (unsigned int i=1; i<point_count; i++)
-		{
-			pres_cum_u[i] = pres_cum_u[i-1] + up[i].pres;
-			pres_cum_v[i] = pres_cum_v[i-1] + vp[i].pres;
-			pres_cum_w[i] = pres_cum_w[i-1] + wp[i].pres;
-		}
-				
-		pres_med = 0.5f*pres_cum_u[point_count-1];
+        //Compute cumulative weight
+        pres_cum_u[0] = up[0].pres; pres_cum_v[0] = vp[0].pres; pres_cum_w[0] = wp[0].pres;
+        for (unsigned int i=1; i<point_count; i++)
+        {
+            pres_cum_u[i] = pres_cum_u[i-1] + up[i].pres;
+            pres_cum_v[i] = pres_cum_v[i-1] + vp[i].pres;
+            pres_cum_w[i] = pres_cum_w[i-1] + wp[i].pres;
+        }
 
-		//Look for the indices comprising pres_med and get the filtered value
-		unsigned int cont = 0, ind_l, ind_r;
+        pres_med = 0.5f*pres_cum_u[point_count-1];
 
-		//For u
-		while (pres_med > pres_cum_u[cont]) {cont++;}
-		if (cont == 0)
+        //Look for the indices comprising pres_med and get the filtered value
+        unsigned int cont = 0, ind_l, ind_r;
+
+        //For u
+        while (pres_med > pres_cum_u[cont]) {cont++;}
+        if (cont == 0)
             du_l_dev[index] = up[0].field;
-		else
-		{
-			ind_r = cont; ind_l = cont-1;
+        else
+        {
+            ind_r = cont; ind_l = cont-1;
             du_l_dev[index] = ((pres_cum_u[ind_r] - pres_med)*up[ind_l].field + (pres_med - pres_cum_u[ind_l])*up[ind_r].field)/(pres_cum_u[ind_r] - pres_cum_u[ind_l]);
-		}
+        }
 
-		//For v
-		cont = 0;
-		while (pres_med > pres_cum_v[cont]) {cont++;}
-		if (cont == 0)
+        //For v
+        cont = 0;
+        while (pres_med > pres_cum_v[cont]) {cont++;}
+        if (cont == 0)
             dv_l_dev[index] = vp[0].field;
-		else
-		{
-			ind_r = cont; ind_l = cont-1;
+        else
+        {
+            ind_r = cont; ind_l = cont-1;
             dv_l_dev[index] = ((pres_cum_v[ind_r] - pres_med)*vp[ind_l].field + (pres_med - pres_cum_v[ind_l])*vp[ind_r].field)/(pres_cum_v[ind_r] - pres_cum_v[ind_l]);
-		}
+        }
 
-		//For w
-		cont = 0;
-		while (pres_med > pres_cum_w[cont]) {cont++;}
-		if (cont == 0)
+        //For w
+        cont = 0;
+        while (pres_med > pres_cum_w[cont]) {cont++;}
+        if (cont == 0)
             dw_l_dev[index] = wp[0].field;
-		else
-		{
-			ind_r = cont; ind_l = cont-1;
+        else
+        {
+            ind_r = cont; ind_l = cont-1;
             dw_l_dev[index] = ((pres_cum_w[ind_r] - pres_med)*wp[ind_l].field + (pres_med - pres_cum_w[ind_l])*wp[ind_r].field)/(pres_cum_w[ind_r] - pres_cum_w[ind_l]);
-		}
+        }
     }
-	else
-	{
+    else
+    {
         du_l_dev[index] = du_new_dev[index];
         dv_l_dev[index] = dv_new_dev[index];
         dw_l_dev[index] = dw_new_dev[index];
-	}
+    }
 
     pd_l_dev[index] = pd_dev[index];
     puu_l_dev[index] = puu_dev[index];
@@ -1308,7 +1308,7 @@ void BridgeBack(CSF_cuda *csf_host, CSF_cuda *csf_device)
 __global__ void DebugKernel(CSF_cuda *csf)
 {
     //Add here the code you want to use for debugging
-	printf("\n dx: ");
+    printf("\n dx: ");
     for (unsigned int i = 0; i< (csf->rows_i)*(csf->cols_i); i++)
         printf(" %f", csf->dx_dev[i]);
 
@@ -1501,20 +1501,20 @@ __global__ void MotionFieldKernel (CSF_cuda *csf)
 //Naive implementations of bubbleSort (applied to very small arrays)
 __device__ void bubbleSortDev(fieldAndPresence array[], unsigned int num_elem)
 {
-	bool go_on = true;
-	while (go_on)
-	{
-		go_on = false;
-		for (unsigned int i=1; i<num_elem; i++)
-		{
-			if (array[i-1].field > array[i].field)
-			{
-				ELEM_SWAP(array[i-1].field,array[i].field);
-				ELEM_SWAP(array[i-1].pres,array[i].pres);
-				go_on = true;
-			}
-		}
-	}
+    bool go_on = true;
+    while (go_on)
+    {
+        go_on = false;
+        for (unsigned int i=1; i<num_elem; i++)
+        {
+            if (array[i-1].field > array[i].field)
+            {
+                ELEM_SWAP(array[i-1].field,array[i].field);
+                ELEM_SWAP(array[i-1].pres,array[i].pres);
+                go_on = true;
+            }
+        }
+    }
 }
 
 

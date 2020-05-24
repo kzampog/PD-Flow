@@ -102,7 +102,7 @@ public:
     //Weights for data terms and regularization
     float *mu_uv_dev;
     float *ri_dev, *rj_dev;
-	float *ri_2_dev, *rj_2_dev;
+    float *ri_2_dev, *rj_2_dev;
 
     //Primal-dual acceleration and previous solution
     float *du_acc_dev, *dv_acc_dev, *dw_acc_dev;
@@ -143,8 +143,8 @@ public:
     __host__ void copyNewFrames(float *colour_wf, float *depth_wf);
     __host__ void freeDeviceMemory();
     __host__ void freeLevelVariables();
-	__host__ void copyAllSolutions(float *dx, float *dy, float *dz, float *depth, float *depth_old, float *colour, float *colour_old, float *xx, float *xx_old, float *yy, float *yy_old);
-	__host__ void copyMotionField(float *dx, float *dy, float *dz);
+    __host__ void copyAllSolutions(float *dx, float *dy, float *dz, float *depth, float *depth_old, float *colour, float *colour_old, float *xx, float *xx_old, float *yy, float *yy_old);
+    __host__ void copyMotionField(float *dx, float *dy, float *dz);
 
     __device__ void computePyramidLevel(unsigned int index, unsigned int level);
     __device__ void assignZeros(unsigned int index);
@@ -162,7 +162,7 @@ public:
     __device__ void saturateVariables(unsigned int index);
     __device__ void filterSolution(unsigned int index);
     __device__ float interpolatePixel(float *mat, float ind_u, float ind_v);
-	__device__ float interpolatePixelDepth(float *mat, float ind_u, float ind_v);
+    __device__ float interpolatePixelDepth(float *mat, float ind_u, float ind_v);
     __device__ void computeMotionField(unsigned int index);
 };
 
@@ -213,8 +213,8 @@ __global__ void DebugKernel(CSF_cuda *csf);
 
 //Sorting - Structure field and presence
 struct fieldAndPresence {
-	float field;
-	float pres;
+    float field;
+    float pres;
 };
 
 //Naive implementation of bubbleSort (applied to very small arrays)
